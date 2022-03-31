@@ -40,7 +40,7 @@ global_lowpass = 40.0
 
 
 filenames = ["3109.cnt", "3087.cnt", "3109.cnt"]
-path_to_data = "../data/"
+path_to_data = "./data/"
 #Set up DataFrame to hold row per subject
 person_channels_list = []
 
@@ -53,7 +53,7 @@ for filename in filenames:
 
 
 	#Read the CNT File
-	raw = mne.io.read_raw_cnt("../data/3109.cnt", eog=eog_channels,
+	raw = mne.io.read_raw_cnt(path_to_data+filename, eog=eog_channels,
                           misc=misc_channels, preload=True)  # .filter(l_freq=1.0, h_freq=50.0)
 	print("Channel Names: ", raw.ch_names)
 	raw.rename_channels(channelNameMap)
@@ -61,7 +61,7 @@ for filename in filenames:
 	# beware unlocated channels
 	raw.set_montage(montage=montage, on_missing='warn')
 
-	annot_from_file = mne.read_annotations('../data/3109.cnt')
+	annot_from_file = mne.read_annotations(path_to_data+filename)
 	print("\n", annot_from_file, "\n")
 	raw.set_annotations(annot_from_file)
 
