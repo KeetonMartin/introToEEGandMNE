@@ -139,7 +139,10 @@ for filename in filenames:
 	For  3109.cnt  we got :  <Evoked | '0.50 × 10 + 0.50 × 15' (average, N=66), 0.3 – 0.8 sec, baseline -0.2 – 0 sec (baseline period was cropped after baseline correction), 4 ch, ~40 kB>
 	"""
 
-
+	"""
+	We can have one row per person, where each column is the average value for a channel for a certain epoch
+	3x13 array in this case
+	"""
 
 	#Save this participant with average value to DF
 
