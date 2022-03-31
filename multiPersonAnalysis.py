@@ -5,6 +5,7 @@ This file will help to teach how to make one big dataframe,
 where each subject is a row, and each column is a channel's average value.
 """
 
+#If one of these lines throws an error, try "pip install ..." on cmd line
 #Imports
 import os
 import numpy as np
@@ -145,3 +146,5 @@ for filename in filenames:
 	#Loop to next participant
 
 #Make a dataframe out of the list of dictionaries
+
+#small change to this file...
