@@ -39,7 +39,7 @@ global_highpass = 1.0
 global_lowpass = 40.0
 
 
-filenames = ["3109.cnt", "3087.cnt", "3109.cnt"]
+filenames = ["3109.cnt", "3087.cnt", "3076.cnt"]
 path_to_data = "./data/"
 #Set up DataFrame to hold row per subject
 person_channels_list = []
