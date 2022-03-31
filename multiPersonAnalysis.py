@@ -138,6 +138,8 @@ for filename in filenames:
 	For  3109.cnt  we got :  <Evoked | '0.50 × 10 + 0.50 × 15' (average, N=66), 0.3 – 0.8 sec, baseline -0.2 – 0 sec (baseline period was cropped after baseline correction), 4 ch, ~40 kB>
 	"""
 
+
+
 	#Save this participant with average value to DF
 
 	#Loop to next participant
