@@ -1,9 +1,20 @@
 # Intro to EEG Analysis
 
+"""
+For after Spring break
+- Contact Mainak
+- Figure out how to have event codes / annotations translated into events in MNE
+- Also, need to specifically to have events generated from conditons: one annotation followed by another
+- 10 followed by 35 (for example)
+- Need to be be able to bin specific collections of events
+"""
+
 import os
 import numpy as np
 import mne
 import matplotlib.pyplot as plt
+import os.path as op
+import pandas as pd
 
 # sample_data_folder = mne.datasets.sample.data_path()
 # sample_data_raw_file = os.path.join(sample_data_folder, 'MEG', 'sample',
@@ -27,7 +38,7 @@ misc_channels = ["FT9", "FT10"]
 
 
 montage = mne.channels.make_standard_montage("standard_1020")
-# fig = montage.plot(kind='3d')
+fig = montage.plot(kind='3d')
 # fig.gca().view_init(azim=70, elev=15)  # set view angle
 # montage.plot(kind='topomap', show_names=False)
 
@@ -38,6 +49,12 @@ raw.rename_channels(channelNameMap)
 print("Updated Channel Names for Montage: ", raw.ch_names)
 # beware unlocated channels
 raw.set_montage(montage=montage, on_missing='warn')
+
+annot_from_file = mne.read_annotations('../data/3109.cnt')
+print("\n", annot_from_file, "\n")
+raw.set_annotations(annot_from_file)
+
+
 # raw_highpass = raw.copy().filter(l_freq=0.5, h_freq=None)
 
 # plotting params
@@ -70,14 +87,6 @@ print("Filtered data info field: ", filtered_data.info)
 # filtered_data.plot_psd(fmax=50)
 # filtered_data.plot(duration=30, n_channels=len(filtered_data.ch_names), remove_dc=True, scalings=global_scalings)
 
-event_dict = {
-    'word seen once': 5,
-    'word seen twice': 8,
-    'test seen once': 10,
-    'test seen twice': 15,
-    'new words1': 18,
-    'new words2': 20
-}
 
 #We would rather reject eyeblinks through ICA
 # reject_criteria = dict(
@@ -91,10 +100,29 @@ custom_mapping = {'seen_once_correct':"10", 'seen_twice_correct':"15",
                       'word_shown_once':"5", 'word_shown_twice':"8"}
 reversed_custom_mapping = {value : key for (key, value) in custom_mapping.items()}
 
-
+print("Finding annotations...")
 events_from_annot, event_dict = mne.events_from_annotations(filtered_data)
+# event_dict = {'word seen once': 5,'word seen twice': 8,'test seen once': 10,'test seen twice': 15,'new words1': 18,'new words2': 20}
+# event_dict = {'5':'word seen once','8':'word seen twice','10':'test seen once','15':'test seen twice','18':'new words1','20':'new words2'}
+
+# event_dict['10'] = 'test seen once'
+
+
+#Use event_dict to figure out if this participant uses 18 or 20.
+#save as global variable and use it throughout
+
 print("event dictionary: ", event_dict)
 print("events from annotations: ", events_from_annot[:5])  # show the first 5
+
+fig = mne.viz.plot_events(events_from_annot, sfreq=raw.info['sfreq'],
+                          first_samp=raw.first_samp, event_id=event_dict)
+fig.subplots_adjust(right=0.7)  # make room for legend
+
+
+
+
+
+
 
 epochs = mne.Epochs(filtered_data, events_from_annot, event_id=event_dict,
                     tmin=-0.2, tmax=1.2, preload=True)		#Option to reject from criteria later if needed
@@ -125,12 +153,31 @@ print("applied the ICA... trying to plot clean epochs")
 filtered_data.plot_image(picks=['Cz', 'Pz'])
 
 epochs = filtered_data
+
+epochs_fname = "first-save-attempt-epo.fif"
+epochs.save(epochs_fname, overwrite=True)
+
 conds_we_care_about = ['10', '15', '18']
 epochs.equalize_event_counts(conds_we_care_about)  # this operates in-place
 selected_epochs=epochs['10', '15', '18']
-selected_epochs.plot_image(picks=['Cz', 'Pz'])
 
+correct_familiar_words_epochs = epochs['10', '15']
+correct_unfamiliar_word_epochs = epochs['18']
 
+# selected_epochs.plot_image(picks=['Cz', 'Pz'])
+
+familiar_evoked = correct_familiar_words_epochs.average()
+unfamiliar_evoked = correct_unfamiliar_word_epochs.average()
+
+# familiar_evoked.plot_joint(picks='eeg')
+# familiar_evoked.plot_topomap(times=[0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], ch_type='eeg')
+
+evoked_diff = mne.combine_evoked([familiar_evoked, unfamiliar_evoked], weights=[1, -1])
+evoked_diff.pick_types(include=['F3', 'F4', 'P3', 'P4']).plot_topo(color='r', legend=True)
+
+evokeds = dict(familiar=familiar_evoked, unfamiliar=unfamiliar_evoked)
+# mne.viz.plot_compare_evokeds(evokeds, legend = 'upper left', show_sensors= 'upper right')
+# mne.viz.plot_compare_evokeds(evokeds, picks=['Cz', 'Pz'], combine='mean')
 
 filtered_data.plot(n_epochs=10, scalings=global_scalings)
 
@@ -149,3 +196,47 @@ filtered_data.plot(n_epochs=10, scalings=global_scalings)
 #For next time: why are we not able to see the plot of all the epochs after the ICA
 # We'd love to see that the new data is actually de-noised thanks to the ICA
 # If it's not denoised, we may have to go back to ICA and remove more artifacts
+
+
+#Processing pipeline
+'''
+We can import the data
+We can label the channels
+We can epoch the data based on event codes
+We can run ICA
+We can choose by hand which components to drop / reject
+We can look at conditions we care about for certain event codes, like the average voltage
+
+'''
+
+good_tmin, good_tmax = .3, .8
+
+# Select all of the channels and crop to the time window
+channels = ['F3', 'F4', 'P3', 'P4']
+hemisphere = ['left', 'right', 'left', 'right']
+familiar_mean_roi = familiar_evoked.copy().pick(channels).crop(
+    tmin=good_tmin, tmax=good_tmax)
+
+# Extract mean amplitude in µV over time
+mean_amp_roi = familiar_mean_roi.data.mean(axis=1) * 1e6
+
+# Store the data in a data frame
+mean_amp_roi_df = pd.DataFrame({
+    'ch_name': familiar_mean_roi.ch_names,
+    'hemisphere': hemisphere,
+    'mean_amp': mean_amp_roi
+})
+
+# Print the data frame
+print(mean_amp_roi_df.groupby('hemisphere').mean())
+
+
+#For next week (March 31?)
+#Make one big dataframe, where each subject is a row, and the columns are ...
+# maybe left and right hemisphere
+
+#Save that dataframe as a CSV
+
+#See if the dataframe can have rows be participants and columns be average value for each channel
+
+

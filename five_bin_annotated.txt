@@ -1,0 +1,19 @@
+bin 1
+Hit_Once
+.{10}{30;35;40;45}	//10 followed by one of these number is correctly recognized, seen once
+
+bin 2
+Hit_Twice
+.{15}{30;35;40;45}	//15 followed by ... is correctly recognized, seen twice
+
+bin 3
+CR
+.{18;20}{55;60}		//18 or 20 followed by 55 or 60, correctly recognized as unforeseen word
+
+bin4
+Study1
+.{5} 			//Word studied once
+
+bin5
+Study2
+.{8} 			//Word repeated twice
