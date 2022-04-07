@@ -42,7 +42,7 @@ global_lowpass = 40.0
 filenames = ["3109.cnt", "3087.cnt", "3076.cnt"]
 path_to_data = "./data/"
 #Set up DataFrame to hold row per subject
-person_channels_list = []
+aggregate_df = []
 
 #Establish loop for 3 files
 for filename in filenames:
@@ -83,7 +83,7 @@ for filename in filenames:
 	print("events from annotations: ", events_from_annot[:5])  # show the first 5
 
 	#See when the events are happening:
-	fig = mne.viz.plot_events(events_from_annot, sfreq=raw.info['sfreq'], first_samp=raw.first_samp, event_id=event_dict)
+	# fig = mne.viz.plot_events(events_from_annot, sfreq=raw.info['sfreq'], first_samp=raw.first_samp, event_id=event_dict)
 	# fig.subplots_adjust(right=0.7)  # make room for legend
 
 
@@ -107,7 +107,7 @@ for filename in filenames:
 	#Plot newly cleaned epochs
 	print("applied the ICA... trying to plot clean epochs")
 	epochs = filtered_data
-	epochs.plot_image(picks=['Cz', 'Pz'])
+	# epochs.plot_image(picks=['Cz', 'Pz'])
 
 	epochs_fname = filename[:-4] + "-first-save-attempt-epo.fif"
 	epochs.save(epochs_fname, overwrite=True)
@@ -119,11 +119,17 @@ for filename in filenames:
 	correct_familiar_words_epochs = epochs['10', '15']
 	correct_unfamiliar_word_epochs = epochs['18']
 
+	tens = epochs['10']
+	fifteens = epochs['15']
+
 	#Plot differences between familiar and unfamiliar words
 	familiar_evoked = correct_familiar_words_epochs.average()
 	unfamiliar_evoked = correct_unfamiliar_word_epochs.average()
 	evoked_diff = mne.combine_evoked([familiar_evoked, unfamiliar_evoked], weights=[1, -1])
-	evoked_diff.pick_types(include=['F3', 'F4', 'P3', 'P4']).plot_topo(color='r', legend=True)
+	# evoked_diff.pick_types(include=['F3', 'F4', 'P3', 'P4']).plot_topo(color='r', legend=True)
+
+	tens_evoked = tens.average()
+	fifteens_evoked = fifteens.average()
 
 	# evokeds = dict(familiar=familiar_evoked, unfamiliar=unfamiliar_evoked)
 	# filtered_data.plot(n_epochs=10, scalings=global_scalings)
@@ -141,8 +147,22 @@ for filename in filenames:
 	For  3109.cnt  we got :  <Evoked | '0.50 × 10 + 0.50 × 15' (average, N=66), 0.3 – 0.8 sec, baseline -0.2 – 0 sec (baseline period was cropped after baseline correction), 4 ch, ~40 kB>
 	"""
 
-	subject_df = selected_epochs.to_data_frame()
-	print("\n",subject_df.iloc[:5, :10],"\n")
+	# subject_df = selected_epochs.to_data_frame()
+	print("Type of fam mean roi object: \n", familiar_mean_roi)
+	subject_df = familiar_mean_roi.to_data_frame()
+	print("\nmean roi df: ", subject_df, "\n")
+	# print("\n",subject_df.iloc[:5, :10],"\n")
+
+	collapsed_subject = subject_df.mean(axis=0)
+	collapsed_subject = collapsed_subject.to_dict()
+	collapsed_subject["subject"] = filename
+	del collapsed_subject["time"]
+	print("collapsed subject:\n", collapsed_subject)
+	print("\ncol sub type: ", type(collapsed_subject))
+
+	#Save this participant with average value to DF
+	# collapsed_subject_clean = collapsed_subject[collapsed_subject.columns.difference(['time'])]
+	aggregate_df.append(collapsed_subject)
 
 
 	"""
@@ -150,10 +170,13 @@ for filename in filenames:
 	3x13 array in this case
 	"""
 
-	#Save this participant with average value to DF
 
 	#Loop to next participant
 
 #Make a dataframe out of the list of dictionaries
+output_frame=pd.DataFrame(aggregate_df)
+print(output_frame)
+
+output_frame.to_csv("output/firstFile.csv")
 
 #small change to this file...
