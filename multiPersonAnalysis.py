@@ -125,8 +125,10 @@ for filename in filenames:
 	evoked_diff = mne.combine_evoked([familiar_evoked, unfamiliar_evoked], weights=[1, -1])
 	evoked_diff.pick_types(include=['F3', 'F4', 'P3', 'P4']).plot_topo(color='r', legend=True)
 
-	evokeds = dict(familiar=familiar_evoked, unfamiliar=unfamiliar_evoked)
-	filtered_data.plot(n_epochs=10, scalings=global_scalings)
+	# evokeds = dict(familiar=familiar_evoked, unfamiliar=unfamiliar_evoked)
+	# filtered_data.plot(n_epochs=10, scalings=global_scalings)
+
+	print(familiar_evoked)
 
 	#Pick the channels we want to save average values for
 	channels = ['F3', 'F4', 'P3', 'P4']
@@ -138,6 +140,10 @@ for filename in filenames:
 	"""
 	For  3109.cnt  we got :  <Evoked | '0.50 × 10 + 0.50 × 15' (average, N=66), 0.3 – 0.8 sec, baseline -0.2 – 0 sec (baseline period was cropped after baseline correction), 4 ch, ~40 kB>
 	"""
+
+	subject_df = selected_epochs.to_data_frame()
+	print("\n",subject_df.iloc[:5, :10],"\n")
+
 
 	"""
 	We can have one row per person, where each column is the average value for a channel for a certain epoch
