@@ -44,7 +44,7 @@ global_lowpass = 40.0
 filenames = ["3109.cnt", "3087.cnt", "3076.cnt"]
 path_to_data = "./data/"
 #Set up DataFrame to hold row per subject
-aggregate_df = []
+aggregate_df_list = []
 
 #Establish loop for 3 files
 for filename in filenames:
@@ -158,6 +158,8 @@ for filename in filenames:
 
 	subject_id = int(filename[:-4])
 
+	#Basically, they really don't want you to do things this way so it takes some serious wrangling
+	#They want you to just keep each dataframe seperate if you're seperating things on different event codes 
 	for evoked_event_subset in evoked_attempt_1:
 		print("Working on subject: ", subject_id)
 		# subject_df = pd.DataFrame(evoked_attempt_1)
@@ -167,14 +169,16 @@ for filename in filenames:
 		collapsed_subject_per_event = collapsed_subject_per_event.to_dict()
 		del collapsed_subject_per_event["time"]
 		collapsed_subject_per_event_renamed_columns = {k+"for"+evoked_event_subset.comment: v for k, v in collapsed_subject_per_event.items()}
-		collapsed_subject_per_event_renamed_columns["subject"] = filename
+		# collapsed_subject_per_event_renamed_columns["subject"] = subject_id
+		print("dictionary with subject attribute in there: ", collapsed_subject_per_event_renamed_columns)
 		collapsed_subject_per_event_df = pd.DataFrame(collapsed_subject_per_event_renamed_columns, index=[subject_id])
 		#Right now, indexing doesn't seem to work the way I want.
 
 		print(collapsed_subject_per_event_df)
 		evoked_event_dfs.append(collapsed_subject_per_event_df)
 
-	merged_events_df = reduce(lambda left,right: pd.merge(left,right,on='subject'), evoked_event_dfs)
+	merged_events_df = reduce(lambda left,right: pd.merge(left,right,left_index=True, right_index=True), evoked_event_dfs)
+	# merged_events_df = merged_events_df.reindex
 
 	print("Merged Events for one subject: \n", merged_events_df)
 
@@ -189,7 +193,7 @@ for filename in filenames:
 
 	#Save this participant with average value to DF
 	# collapsed_subject_clean = collapsed_subject[collapsed_subject.columns.difference(['time'])]
-	aggregate_df.append(merged_events_df.to_dict())
+	aggregate_df_list.append(merged_events_df)
 
 
 	"""
@@ -213,7 +217,9 @@ for filename in filenames:
 	#Loop to next participant
 
 #Make a dataframe out of the list of dictionaries
-output_frame=pd.DataFrame(aggregate_df)
+# output_frame=pd.DataFrame.from_records(aggregate_df)
+print(aggregate_df_list)
+output_frame = pd.concat(aggregate_df_list)
 print(output_frame)
 
 output_frame.to_csv("output/firstFile.csv")
