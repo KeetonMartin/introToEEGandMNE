@@ -11,8 +11,10 @@ import os
 import numpy as np
 import mne
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import show, plot
 import os.path as op
 import pandas as pd
+from functools import reduce
 
 #Configure Channels
 channelNameMap = {
@@ -123,51 +125,88 @@ for filename in filenames:
 	fifteens = epochs['15']
 
 	#Plot differences between familiar and unfamiliar words
-	familiar_evoked = correct_familiar_words_epochs.average()
-	unfamiliar_evoked = correct_unfamiliar_word_epochs.average()
-	evoked_diff = mne.combine_evoked([familiar_evoked, unfamiliar_evoked], weights=[1, -1])
+	# familiar_evoked = correct_familiar_words_epochs.average()
+	# unfamiliar_evoked = correct_unfamiliar_word_epochs.average()
+	# evoked_diff = mne.combine_evoked([familiar_evoked, unfamiliar_evoked], weights=[1, -1])
 	# evoked_diff.pick_types(include=['F3', 'F4', 'P3', 'P4']).plot_topo(color='r', legend=True)
 
-	tens_evoked = tens.average()
-	fifteens_evoked = fifteens.average()
+	# tens_evoked = tens.average()
+	# fifteens_evoked = fifteens.average()
 
 	# evokeds = dict(familiar=familiar_evoked, unfamiliar=unfamiliar_evoked)
 	# filtered_data.plot(n_epochs=10, scalings=global_scalings)
 
-	print(familiar_evoked)
+	# print(familiar_evoked)
 
 	#Pick the channels we want to save average values for
 	channels = ['F3', 'F4', 'P3', 'P4']
 	selected_epochs=epochs['10', '15', '18']
 	good_tmin, good_tmax = .3, .8
 
-	familiar_mean_roi = familiar_evoked.copy().pick(channels).crop(tmin=good_tmin, tmax=good_tmax)
-	print("For ", filename, " we got : ", familiar_mean_roi)
+	evoked_attempt_1 = selected_epochs.crop(tmin=good_tmin, tmax=good_tmax).average(picks=channels, method="mean", by_event_type=True)
+
+	# familiar_mean_roi = familiar_evoked.copy().pick(channels).crop(tmin=good_tmin, tmax=good_tmax)
+	print("For ", filename, " we got : ", evoked_attempt_1)
 	"""
 	For  3109.cnt  we got :  <Evoked | '0.50 × 10 + 0.50 × 15' (average, N=66), 0.3 – 0.8 sec, baseline -0.2 – 0 sec (baseline period was cropped after baseline correction), 4 ch, ~40 kB>
 	"""
+	# tens_mean_roi = 
 
-	# subject_df = selected_epochs.to_data_frame()
-	print("Type of fam mean roi object: \n", familiar_mean_roi)
-	subject_df = familiar_mean_roi.to_data_frame()
-	print("\nmean roi df: ", subject_df, "\n")
-	# print("\n",subject_df.iloc[:5, :10],"\n")
+	print("Let's see that as a DataFrame though...\n")
 
-	collapsed_subject = subject_df.mean(axis=0)
-	collapsed_subject = collapsed_subject.to_dict()
-	collapsed_subject["subject"] = filename
-	del collapsed_subject["time"]
-	print("collapsed subject:\n", collapsed_subject)
-	print("\ncol sub type: ", type(collapsed_subject))
+	evoked_event_dfs = []
+
+	subject_id = int(filename[:-4])
+
+	for evoked_event_subset in evoked_attempt_1:
+		print("Working on subject: ", subject_id)
+		# subject_df = pd.DataFrame(evoked_attempt_1)
+		subject_evoked_event_df = evoked_event_subset.to_data_frame()
+
+		collapsed_subject_per_event = subject_evoked_event_df.mean(axis=0)
+		collapsed_subject_per_event = collapsed_subject_per_event.to_dict()
+		del collapsed_subject_per_event["time"]
+		collapsed_subject_per_event_renamed_columns = {k+"for"+evoked_event_subset.comment: v for k, v in collapsed_subject_per_event.items()}
+		collapsed_subject_per_event_renamed_columns["subject"] = filename
+		collapsed_subject_per_event_df = pd.DataFrame(collapsed_subject_per_event_renamed_columns, index=[subject_id])
+		#Right now, indexing doesn't seem to work the way I want.
+
+		print(collapsed_subject_per_event_df)
+		evoked_event_dfs.append(collapsed_subject_per_event_df)
+
+	merged_events_df = reduce(lambda left,right: pd.merge(left,right,on='subject'), evoked_event_dfs)
+
+	print("Merged Events for one subject: \n", merged_events_df)
+
+	# # subject_df = selected_epochs.to_data_frame()
+	# print("Type of fam mean roi object: \n", familiar_mean_roi)
+	# subject_df = familiar_mean_roi.to_data_frame()
+	# print("\nmean roi df: ", subject_df, "\n")
+	# # print("\n",subject_df.iloc[:5, :10],"\n")
+
+	print("collapsed subject:\n", merged_events_df)
+	print("\n collapsed subject type: ", type(merged_events_df))
 
 	#Save this participant with average value to DF
 	# collapsed_subject_clean = collapsed_subject[collapsed_subject.columns.difference(['time'])]
-	aggregate_df.append(collapsed_subject)
+	aggregate_df.append(merged_events_df.to_dict())
 
 
 	"""
 	We can have one row per person, where each column is the average value for a channel for a certain epoch
 	3x13 array in this case
+	"""
+
+	"""
+	For next week: Apr 14
+	Split the 4 column dataframe into the 12 columns, one column per channel/response (see above)
+	Explore automatic exclusion of certain bad components: https://mne.tools/stable/auto_tutorials/preprocessing/40_artifact_correction_ica.html#using-an-eog-channel-to-select-ica-components
+		The plots of components still comes up so we can identify which components we think are bad
+		But the computer doesn't wait for user input, it still identifies the bad ones and continues on its own
+	It might be easier to test the new functionality with just one user
+	If there's time, try to add some configuration options for plots, perhaps command line arguments, loading from files
+
+	
 	"""
 
 
