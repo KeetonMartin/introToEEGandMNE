@@ -100,7 +100,29 @@ for filename in filenames:
 
 	#Certain components were excluded for the first filename based on characteristics...
 	#Are we sure we still want to drop these components for every participant?...
-	ica.exclude = [0, 1, 2, 4, 6]  # details on how we picked these are omitted here
+
+
+
+
+
+
+	ica.exclude = []  #Going to decide on these with EOG match scores
+	eog_indices, eog_scores = ica.find_bads_eog(filtered_data)
+	ica.exclude = eog_indices
+
+	ica.plot_scores(eog_scores)
+	# plot diagnostics
+	ica.plot_properties(filtered_data, picks=eog_indices)
+
+	# plot ICs applied to filtered_data data, with EOG matches highlighted
+	ica.plot_sources(filtered_data, show_scrollbars=True)
+
+	# plot ICs applied to the averaged EOG epochs, with EOG matches highlighted
+	# ica.plot_sources(eog_evoked)
+
+
+
+
 
 	orig_raw = filtered_data.copy()
 	filtered_data.load_data()
