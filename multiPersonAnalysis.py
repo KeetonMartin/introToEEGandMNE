@@ -195,18 +195,14 @@ for filename in filenames:
 	# collapsed_subject_clean = collapsed_subject[collapsed_subject.columns.difference(['time'])]
 	aggregate_df_list.append(merged_events_df)
 
-
-	"""
-	We can have one row per person, where each column is the average value for a channel for a certain epoch
-	3x13 array in this case
-	"""
-
 	"""
 	For next week: Apr 14
-	Split the 4 column dataframe into the 12 columns, one column per channel/response (see above)
+	done: Split the 4 column dataframe into the 12 columns, one column per channel/response (see above)
 	Explore automatic exclusion of certain bad components: https://mne.tools/stable/auto_tutorials/preprocessing/40_artifact_correction_ica.html#using-an-eog-channel-to-select-ica-components
-		The plots of components still comes up so we can identify which components we think are bad
-		But the computer doesn't wait for user input, it still identifies the bad ones and continues on its own
+		It turns out that there's 3 different options for auto selecting ICA components to exclude:
+			- Using an EOG Channel to select ICA components
+			- Using a simulated channel to select ICA components
+			- Using template matching to select ICA components
 	It might be easier to test the new functionality with just one user
 	If there's time, try to add some configuration options for plots, perhaps command line arguments, loading from files
 
