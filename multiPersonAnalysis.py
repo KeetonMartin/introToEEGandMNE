@@ -104,7 +104,13 @@ for filename in filenames:
 
 
 
-
+	"""
+	We are switching back to hand-selection of which components we want to exclude, because
+	while we seem to be able to filter out eye blinks automatically, there's not a great
+	programmatic way we found to filter out all bad components if we don't want to assume
+	that all subjects will have similar bad components.
+	
+	"""
 
 	ica.exclude = []  #Going to decide on these with EOG match scores
 	eog_indices, eog_scores = ica.find_bads_eog(filtered_data)
