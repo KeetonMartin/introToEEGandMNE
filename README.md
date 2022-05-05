@@ -63,6 +63,8 @@ To get pip on windows: `curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py`
 Now what you're going to want to do is actually get this code in this repo downloaded to your machine. The easiest way to do this is with `git clone`.
 Git is what's known as a Version Control System. You can think of it like google docs for code. Git comes installed on macs and linux machines so you should be good to run these commands. But before we download the code, we need to navigate to a directory that you want to put everything in. For me, I like to keep stuff in my `Documents` folder, but some people like to keep stuff in their `Desktop` or other places on their machine.
 
+If you need to install Git on Windows, try this: https://git-scm.com/downloads
+
 For me, my folder I want to clone into is `/Users/keeton/Documents/courses/neuro403/`
 Once you're ready to clone into your `wd`, run the following
 ```console
