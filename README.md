@@ -55,7 +55,7 @@ MNE has their own installation guide but keeping things simple you should be fin
 Keetons-Computer@Keeton:~$ pip install mne
 ```
 
-To get pip on windows: curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+To get pip on windows: `curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py`
 
 ## Basis of Git and Github
 Now what you're going to want to do is actually get this code in this repo downloaded to your machine. The easiest way to do this is with `git clone`.
