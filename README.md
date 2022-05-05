@@ -49,6 +49,8 @@ Python 3.8.2
 ```
 As long as your version is greater than 3.0.0 you should be fine for this project. If you need to update: https://www.python.org/downloads/macos/
 
+Windows note on getting python to work on cmd prompt: https://initialcommit.com/blog/python-is-not-recognized-as-an-internal-or-external-command#:~:text=In%20order%20to%20be%20able,listed%20in%20the%20system%20PATH%20.
+
 ### MNE
 MNE has their own installation guide but keeping things simple you should be fine to just run
 ```console
